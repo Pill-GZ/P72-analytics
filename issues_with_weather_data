@@ -1,0 +1,23 @@
+issues:
+	date not sorted
+	number of stations in use not constant
+	staions phase in and out
+	missingness in "CATTARAUGUS CO OLEAN" and "CATTARAUGUS COUNTY OLEAN AIRPORT" dovetails!
+	same location under the different names: 
+		CATTARAUGUS CO OLEAN => CATTARAUGUS COUNTY OLEAN AIRPORT
+		FLOYD BENNETT MEM => FLOYD BENNETT MEM => FLOYD BENNETT MEMO AIRPORT
+		LONG ISLAND MAC ART => LONG ISLAND MAC ART => LONG ISLAND MAC ARTHUR AIRPORT
+		CENTRAL PARK => NEW YORK CENTRAL PARK => NYC CENTRAL PARK
+	similar locations replacing old station:
+		OGDENSBURG => OGDENSBURG INTL 
+		THE BATTERY => PORT AUTH DOWNTN MANHATTAN WALL ST HEL
+	different stations bearing the same/similar names: 
+		ROCHESTER & ROCHESTER
+		MONTAUK & MONTAUK AIRPORT 
+
+ideas: 
+	interaction between population size and weather
+	spatial-temporal drifts in weather conditions -- would matrix completion work??
+	missingness could inform number of calls?
+
+
