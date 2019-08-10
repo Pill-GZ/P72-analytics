@@ -232,9 +232,9 @@ library(mapproj)
 par(mfrow = c(1,1), mar = c(1,1,1,1))
 xy <- map("county", xlim = c(-80, -71), ylim = c(40, 45), resolution = 0)
 map_color <- rep(NA, nrow(unique_stations))
-map_color[station_ID_after_May2018] <- "black"
-map_color[setdiff(station_ID_before_May2018, replaced_stations_ID)] <- "red"
-map_color[intersect(station_ID_after_May2018, station_ID_before_May2018)] <- "black"
+map_color[as.numeric(station_ID_after_May2018)] <- "black"
+map_color[as.numeric(setdiff(station_ID_before_May2018, replaced_stations_ID))] <- "red"
+map_color[as.numeric(intersect(station_ID_after_May2018, station_ID_before_May2018))] <- "black"
 with(unique_stations, points(Longitude, Latitude, col = map_color, cex = 1.5, pch = 20))
 legend("topleft", pch = 20, pt.cex = 1.5, bg = grey(0.8), box.lwd = 0,
        col = c("red"), legend = c("phased out after May 2018"))

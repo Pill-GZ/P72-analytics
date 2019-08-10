@@ -17,9 +17,9 @@ complaint_type_table <- table(factor(records$Complaint.Type))
 complaint_type_table <- sort(complaint_type_table, decreasing = T)
 length(complaint_type_table)
 
-par(mar = c(15,3,1,1))
+par(mar = c(15,3,1,1), mfrow = c(1,1))
 plot(complaint_type_table, las = 3)
-
+par(mar = c(3,3,1,1), mfrow = c(1,1))
 plot(cumsum(complaint_type_table) / sum(complaint_type_table), ylim = c(0,1))
 abline(h = 0.95, lty = 2)
 
@@ -68,6 +68,18 @@ test <- test %>%
   mutate(total_records_by_agency = sum(n_records)) %>%
   arrange(desc(total_records_by_agency))
 
+test %>% distinct(Agency)
+# Top 10 hadling agencies
+# 1 HPD   
+# 2 NYPD  
+# 3 DOT   
+# 4 DSNY  
+# 5 DEP   
+# 6 DOB   
+# 7 DPR   
+# 8 DOHMH 
+# 9 DOF   
+# 10 TLC
 
 # locations
 
