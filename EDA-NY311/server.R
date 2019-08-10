@@ -52,7 +52,7 @@ function(input,output, session){
     par(mar = c(0,5,3,1))
     barplot(rev(tbl$count[1:length(agencyTypes)]), names.arg = rev(agencyTypes),
             las = 2, horiz = T, xaxt = 'n')
-    axis(side = 3, pos = 10, at = seq(0, max(agency_table), 500), las = 2)
+    axis(side = 3, pos = 10, at = seq(0, max(tbl$count), 500), las = 2)
   })
   
 }
