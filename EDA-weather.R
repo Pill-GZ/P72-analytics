@@ -341,8 +341,10 @@ weather_NYC <- weather %>%
 weather_NYC %>% distinct(Station_ID)
 names(weather_NYC)
 
-# convert long to wide format
+##### convert long to wide format ################################################################################
+
 library(tidyr)
+
 MeanTemp_wide <- weather_NYC %>% select(Date, Station_ID, MeanTemp) %>% spread(Station_ID, MeanTemp)
 MinTemp_wide <- weather_NYC %>% select(Date, Station_ID, MinTemp) %>% spread(Station_ID, MinTemp)
 MaxTemp_wide <- weather_NYC %>% select(Date, Station_ID, MaxTemp) %>% spread(Station_ID, MaxTemp)
@@ -355,7 +357,8 @@ Rain_wide <- weather_NYC %>% select(Date, Station_ID, Rain) %>% spread(Station_I
 SnowDepth_wide <- weather_NYC %>% select(Date, Station_ID, SnowDepth) %>% spread(Station_ID, SnowDepth)
 SnowIce_wide <- weather_NYC %>% select(Date, Station_ID, SnowIce) %>% spread(Station_ID, SnowIce)
 
-# replace artificial zeros with NA's
+############# replace artificial zeros with NA's #################################################################
+
 check_variable <- SnowDepth_wide
 par(mfrow = c(10, 1))
 for (i in unlist(NYC_stations)) {
@@ -367,6 +370,9 @@ for (i in unlist(NYC_stations)) {
   legend("topleft", legend = i)
 }
 
+# MeanTemp_wide is fine
+# MinTemp_wide is fine
+# MaxTemp_wide is fine
 # DewPoint_wide is fine (NA: 4, 59, 27)
 # Percipitation_wide: 4, 59, 27 (also: weird 100's)
 Percipitation_wide[,c("4", "59", "27")] <- NA
@@ -380,10 +386,84 @@ Rain_wide[,c("4", "59", "27")] <- NA
 # SnowIce_wide: 4, 59, 27
 SnowIce_wide[,c("4", "59", "27")] <- NA
 
-## now combine similar locations
+############## now combine similar locations ###############################################################
 
+NYC_stations
 
+NYC_stations_combined <- c("4", "50", "9", "28", "27", "26")
 
+MeanTemp_wide <- MeanTemp_wide %>% 
+  mutate('9' = coalesce(!!!MeanTemp_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!MeanTemp_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+MinTemp_wide <- MinTemp_wide %>% 
+  mutate('9' = coalesce(!!!MinTemp_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!MinTemp_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+MaxTemp_wide <- MaxTemp_wide %>% 
+  mutate('9' = coalesce(!!!MaxTemp_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!MaxTemp_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+DewPoint_wide <- DewPoint_wide %>% 
+  mutate('9' = coalesce(!!!DewPoint_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!DewPoint_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+Percipitation_wide <- Percipitation_wide %>% 
+  mutate('9' = coalesce(!!!Percipitation_wide[rev(NYC_stations[[3]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+WindSpeed_wide <- WindSpeed_wide %>% 
+  mutate('9' = coalesce(!!!WindSpeed_wide[rev(NYC_stations[[3]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+MaxSustainedWind_wide <- MaxSustainedWind_wide %>% 
+  mutate('9' = coalesce(!!!MaxSustainedWind_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!MaxSustainedWind_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+Gust_wide <- Gust_wide %>% 
+  mutate('9' = coalesce(!!!Gust_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!Gust_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+Rain_wide <- Rain_wide %>% 
+  mutate('9' = coalesce(!!!Rain_wide[rev(NYC_stations[[3]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+SnowDepth_wide <- SnowDepth_wide %>% 
+  mutate('9' = coalesce(!!!SnowDepth_wide[rev(NYC_stations[[3]])])) %>% 
+  mutate('50' = coalesce(!!!SnowDepth_wide[rev(NYC_stations[[2]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+SnowIce_wide <- SnowIce_wide %>% 
+  mutate('9' = coalesce(!!!SnowIce_wide[rev(NYC_stations[[3]])])) %>% 
+  select(-c("42", "38", "37", "59"))
+
+save(MeanTemp_wide, MinTemp_wide, MaxTemp_wide, DewPoint_wide, 
+     Percipitation_wide, WindSpeed_wide, MaxSustainedWind_wide, 
+     Gust_wide, Rain_wide, SnowDepth_wide, SnowIce_wide, 
+     file = "weather_NYC.Rdata")
+load("weather_NYC.Rdata")
+
+#### check if combined data looks OK ######################################################################
+
+# MeanTemp_wide MinTemp_wide MaxTemp_wide DewPoint_wide Percipitation_wide
+# WindSpeed_wide MaxSustainedWind_wide Gust_wide Rain_wide SnowDepth_wide SnowIce_wide 
+
+check_variable <- MeanTemp_wide
+par(mfrow = c(6, 1), mar = c(3,3,1,1))
+for (i in unlist(NYC_stations_combined)) {
+  if (sum(!is.na(check_variable[,i])) >0) {
+    plot(check_variable[,i])
+  } else {
+    plot(x = check_variable$Date, y = rep(0, nrow(check_variable)), col = 2)
+  }
+  legend("topleft", legend = i)
+}
 
 #### visualize cleaned data #################################################################################
 
@@ -407,13 +487,24 @@ report_by_station_to_plot[unlist(NYC_stations[seq(2,6,2)])] <-
 image(x = num_stations_by_date$Date, z = as.matrix(report_by_station_to_plot), 
       col = c(NA, grey(0.4), grey(0.7)), xaxt= "n", yaxt= "n" )
 text(x = lubridate::ymd("20160101"), y = 0.5, labels = "Central Park station operated under four names...")
-text(x = lubridate::ymd("20100601"), y = (1:10-0.5)/10, labels = unlist(NYC_stations))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 mtext(text = "Weather Stations", at = 0.5, 
       side = 2, line = 1, las = 3)
 mtext("Same location, different names", at = lubridate::ymd("20100101"), 
       side = 3, adj = 0, line = 0.5) 
 
+par(las = 1, mar = c(2,3,3,1))
+report_by_station_to_plot <- !is.na(MeanTemp_wide[NYC_stations_combined])
+report_by_station_to_plot[,NYC_stations_combined[seq(2,6,2)]] <- 
+  report_by_station_to_plot[,NYC_stations_combined[seq(2,6,2)]] * 2
+image(x = num_stations_by_date$Date, z = as.matrix(report_by_station_to_plot), 
+      col = c(NA, grey(0.4), grey(0.7)), xaxt= "n", yaxt= "n" )
+text(x = lubridate::ymd("20160101"), y = 0.40, labels = "All records at Central Park combined", col = "white")
+axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
+mtext(text = "Weather Stations", at = 0.5, 
+      side = 2, line = 1, las = 3)
+mtext("... now grouped, cleand, combined", at = lubridate::ymd("20100101"), 
+      side = 3, adj = 0, line = 0.5) 
 
 #### Explore spatial patterns ####################################################################
 
