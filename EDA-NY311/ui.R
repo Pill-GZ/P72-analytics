@@ -42,7 +42,42 @@ navbarPage("311 what's your non-emergency?", id="nav", # theme = "bootstrap-cosm
                                       plotOutput("histCentile", height = 400)
                         )
                     )
-                
+           ),  # end of first panel
+           
+           tabPanel("Traceplots", 
+                    fluidRow(
+                      
+                      #### parameters and display options ####
+                      
+                      column(2,
+                             br(),
+                             #### weather variable ####
+                             wellPanel(id = "sample_size",
+                                       selectInput("weather_var_name", "Select a weather variable",
+                                                   as.list(weather_var_names)),
+                                       sliderInput("percentile", "Threshold percentile:", 
+                                                   value = 0.5, min = 0, max = 1, step = .1),
+                                       checkboxInput("shade_val_above", 
+                                                     "Shade area above the quantile", TRUE)
+                             )
+                             
+                      ), # end of first column
+                      
+                      #### display OR-RAF diagram ####
+                      
+                      column(10, 
+                             # textOutput("debug"),
+                             div(id = "OR-RAF_diagram",
+                                 
+                                 tags$style(type="text/css", '#OR-RAF_diagram { width:1000px; }'),
+                                 
+                                 plotOutput("traceplot",height = "2500px", width = "100%")
+                             )
+                      ) # end of second column
+                      
+                      #plotlyOutput("OR.RAF.heatmap.plotly")
+                      
+                    ) # end of fluidRow
            )
 )
 
