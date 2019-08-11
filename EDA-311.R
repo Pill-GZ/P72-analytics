@@ -86,9 +86,8 @@ tally_by_date_agency <- records %>%
 
 tally_by_date_agency
 
-library(tidyr)
-
 # convert long to wide format
+library(tidyr)
 tally_by_date_agency_wide <- tally_by_date_agency %>%
   spread(Agency.grouped, n) %>%
   replace(., is.na(.), 0) %>% 
