@@ -25,13 +25,13 @@ records <- records %>%
 records_sample_Jan2015 <- records %>% 
   filter(Date >= lubridate::ymd('20150112'), 
          Date <= lubridate::ymd('20150118'))
-fwrite(x = records_sample, file = "311_records_Jan2015.csv")
+fwrite(x = records_sample_Jan2015, file = "311_records_Jan2015.csv")
 
 # blocks of dates -- Jul 20-26, 2015
 records_sample_Jul2015 <- records %>% 
   filter(Date >= lubridate::ymd('20150720'), 
          Date <= lubridate::ymd('20150726'))
-fwrite(x = records_sample, file = "311_records_Jul2015.csv")
+fwrite(x = records_sample_Jul2015, file = "311_records_Jul2015.csv")
 
 # random samples of 10,000
 records_sample <- sample_n(records, size = 10000)
