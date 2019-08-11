@@ -22,7 +22,7 @@ navbarPage("311 what's your non-emergency?", id="nav", # theme = "bootstrap-cosm
                         
                         leafletOutput("mymap",height = 1000),
                         absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                      draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                      draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
                                       width = 330, height = "auto",
     
                                       h2("Data filter"),

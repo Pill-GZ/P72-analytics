@@ -1,6 +1,6 @@
 rm(list = ls())
 
-####  Load weather dataset ####
+####  Load weather dataset #############################################################################
 
 library(data.table)
 weather <- data.table::fread("weather_NY_2010_2018Nov.csv")
@@ -25,7 +25,7 @@ weather <- weather %>%
 (num_days <- length(unique(weather$Date)))
 max(weather$Date) - min(weather$Date)
 
-#### Explore weather station locations ####
+#### Explore weather station locations ####################################################################
 
 # count the number of unique station locations -- 62 locations, 59 unique names
 unique_stations <- weather %>% 
@@ -78,7 +78,7 @@ axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010,
 mtext(text = "Weather Stations", at = 0.5, 
       side = 2, line = 1, las = 3)
 
-#### Cleaning data: combine stations at same/similar locations ####
+#### Explore data: missingnes pattern at same/similar locations ####################################################################
 
 # mark new stations
 report_by_station_to_plot[,new_stations_ID] <- report_by_station_to_plot[,new_stations_ID] * 2
@@ -143,86 +143,279 @@ report_by_station_to_plot[unlist(relabelled_stations[seq(2,6,2)])] <-
   report_by_station_to_plot[unlist(relabelled_stations[seq(2,6,2)])] * 2
 image(x = num_stations_by_date$Date, z = as.matrix(report_by_station_to_plot), 
       col = c(NA, grey(0.4), grey(0.7)), xaxt= "n", yaxt= "n" )
+text(x = lubridate::ymd("20160101"), y = 0.6, labels = "Central Park station operated under four names...")
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 mtext(text = "Weather Stations", at = 0.5, 
       side = 2, line = 1, las = 3)
 mtext("Same location, different names", at = lubridate::ymd("20100101"), 
       side = 3, adj = 0, line = 0.5) 
 
-#### Explore a pair of stations replacement ####
+#### Explore a pair of stations nearby with one phasing out ####################################################################
 
-test <- vector("list", length(relabelled_stations[[5]]))
-names(test) <- relabelled_stations[[5]]
-for (this_station_ID in relabelled_stations[[5]]) {
+# THE BATTERY => PORT AUTH DOWNTN MANHATTAN WALL ST HEL
+relabelled_stations_pair_index <- 6
+
+test <- vector("list", 2)
+names(test) <- relabelled_stations[[relabelled_stations_pair_index]]
+# names(test) <- c("26", "50")
+for (this_station_ID in names(test)) {
   report_by_this_station <- weather %>%
     group_by(Date) %>%
     filter(Station_ID == this_station_ID) 
   test[[this_station_ID]] <- report_by_this_station
 }
 
-station_43 <- test[['43']]
-station_44 <- test[['44']]
+station_old <- test[[names(test)[1]]] # outgoing station
+station_new <- test[[names(test)[2]]] # new station
 
 ## Both report temperatures
 
 par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # temperatures -- MeanTemp
-plot(x = station_43$Date, y = station_43$MeanTemp, xlim = range(weather$Date), pch = 20)
-points(x = station_44$Date, y = station_44$MeanTemp, col = 2, pch = 20)
+plot(x = station_old$Date, y = station_old$MeanTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_new$Date, y = station_new$MeanTemp, col = 2, pch = 20)
 text(x = min(weather$Date)+50, y = 70, labels = "MeanTemp", adj = 0)
 # temperatures -- MaxTemp
-plot(x = station_43$Date, y = station_43$MaxTemp, xlim = range(weather$Date), pch = 20)
-points(x = station_44$Date, y = station_44$MaxTemp, col = 2, pch = 20)
+plot(x = station_old$Date, y = station_old$MaxTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_new$Date, y = station_new$MaxTemp, col = 2, pch = 20)
 text(x = min(weather$Date)+50, y = 80, labels = "MaxTemp", adj = 0)
 # temperatures -- MinTemp
-plot(x = station_43$Date, y = station_43$MinTemp, xlim = range(weather$Date), pch = 20)
-points(x = station_44$Date, y = station_44$MinTemp, col = 2, pch = 20)
+plot(x = station_old$Date, y = station_old$MinTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_new$Date, y = station_new$MinTemp, col = 2, pch = 20)
 text(x = min(weather$Date)+50, y = 60, labels = "MinTemp", adj = 0)
 
 # Old staions have zero measurements
 
 par(mfrow = c(4,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # Windspeed
-plot(x = station_43$Date, y = station_43$WindSpeed, 
-     xlim = range(weather$Date), ylim = range(station_44$WindSpeed, na.rm = T), pch = 20)
-points(x = station_44$Date, y = station_44$WindSpeed, col = 2, pch = 20)
-text(x = min(weather$Date)+50, y = 12, labels = "WindSpeed", adj = 0)
+plot(x = station_old$Date, y = station_old$WindSpeed, 
+     xlim = range(weather$Date), ylim = range(c(0, station_new$WindSpeed), na.rm = T), pch = 20)
+points(x = station_new$Date, y = station_new$WindSpeed, col = 2, pch = 20)
+text(x = min(weather$Date)+50, y = max(station_new$WindSpeed, na.rm = T)*0.8, labels = "WindSpeed", adj = 0)
 # Percipitation
-plot(x = station_43$Date, y = station_43$Percipitation, 
-     xlim = range(weather$Date), ylim = range(station_44$Percipitation, na.rm = T), pch = 20)
-points(x = station_44$Date, y = station_44$Percipitation, col = 2, pch = 20)
+plot(x = station_old$Date, y = station_old$Percipitation, 
+     xlim = range(weather$Date), ylim = range(station_new$Percipitation, na.rm = T), pch = 20)
+points(x = station_new$Date, y = station_new$Percipitation, col = 2, pch = 20)
 text(x = min(weather$Date)+50, y = 80, labels = "Percipitation", adj = 0)
 # Rain
-plot(x = station_43$Date, y = station_43$Rain, 
-     xlim = range(weather$Date), ylim = range(station_44$Rain, na.rm = T), pch = 20)
-points(x = station_44$Date, y = station_44$Rain, col = 2, pch = 20)
+plot(x = station_old$Date, y = station_old$Rain, 
+     xlim = range(weather$Date), ylim = range(station_new$Rain, na.rm = T), pch = 20)
+points(x = station_new$Date, y = station_new$Rain, col = 2, pch = 20)
 text(x = min(weather$Date)+50, y = 0.8, labels = "Rain", adj = 0)
 # SnowIce
-plot(x = station_43$Date, y = station_43$SnowIce, 
-     xlim = range(weather$Date), ylim = range(station_44$SnowIce, na.rm = T), pch = 20)
-points(x = station_44$Date, y = station_44$SnowIce, pch = 20, col = 2)
+plot(x = station_old$Date, y = station_old$SnowIce, 
+     xlim = range(weather$Date), ylim = range(station_new$SnowIce, na.rm = T), pch = 20)
+points(x = station_new$Date, y = station_new$SnowIce, pch = 20, col = 2)
 text(x = min(weather$Date)+50, y = 0.8, labels = "SnowIce", adj = 0)
 
 # Old staions do not have measurements
 
 par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # DewPoint
-plot(x = station_44$Date, y = station_44$DewPoint, 
+plot(x = station_new$Date, y = station_new$DewPoint, 
      xlim = range(weather$Date), pch = 20, col = 2)
 text(x = min(weather$Date)+50, y = 56, labels = "DewPoint", adj = 0)
 # MaxSustainedWind
-plot(x = station_44$Date, y = station_44$MaxSustainedWind, 
+plot(x = station_new$Date, y = station_new$MaxSustainedWind, 
      xlim = range(weather$Date), pch = 20, col = 2)
-text(x = min(weather$Date)+50, y = 28, labels = "MaxSustainedWind", adj = 0)
+text(x = min(weather$Date)+50, y = max(station_new$MaxSustainedWind, na.rm = T)*0.8, labels = "MaxSustainedWind", adj = 0)
 # Gust
-plot(x = station_44$Date, y = station_44$Gust, 
+plot(x = station_new$Date, y = station_new$Gust,
      xlim = range(weather$Date), pch = 20, col = 2)
 text(x = min(weather$Date)+50, y = 40, labels = "Gust", adj = 0)
 
 # SnowDepth does not exist for both!!
 
+#### Data quality is a monir issue at central park stations ####################################################################
 
-#### Explore spatial patterns ####
+test <- vector("list", length(relabelled_stations[[4]]))
+names(test) <- relabelled_stations[[4]]
+for (this_station_ID in relabelled_stations[[4]]) {
+  report_by_this_station <- weather %>%
+    group_by(Date) %>%
+    filter(Station_ID == this_station_ID) 
+  test[[this_station_ID]] <- report_by_this_station
+}
+
+station_42 <- test[['42']]
+station_38 <- test[['38']]
+station_37 <- test[['37']]
+station_9 <- test[['9']]
+
+## Both report temperatures
+png("NYC_CentralPark_tmp.png", width = 900, height = 350)
+par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
+# temperatures -- MeanTemp
+plot(x = station_42$Date, y = station_42$MeanTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_37$Date, y = station_37$MeanTemp, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$MeanTemp, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$MeanTemp, col = 2, pch = 20)
+text(x = min(weather$Date)+300, y = 87, labels = "MeanTemp", adj = 0)
+# temperatures -- MaxTemp
+plot(x = station_42$Date, y = station_42$MaxTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_37$Date, y = station_37$MaxTemp, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$MaxTemp, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$MaxTemp, col = 2, pch = 20)
+text(x = min(weather$Date)+300, y = 100, labels = "MaxTemp", adj = 0)
+# temperatures -- MinTemp
+plot(x = station_42$Date, y = station_42$MinTemp, xlim = range(weather$Date), pch = 20)
+points(x = station_37$Date, y = station_37$MinTemp, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$MinTemp, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$MinTemp, col = 2, pch = 20)
+text(x = min(weather$Date)+300, y = 80, labels = "MinTemp", adj = 0)
+dev.off()
+
+
+# Old staions have zero measurements
+png("NYC_CentralPark_rain.png", width = 900, height = 350)
+
+par(mfrow = c(4,1), mar = c(2,3,1,1), xaxs="i", las = 1)
+# Windspeed
+plot(x = station_42$Date, y = station_42$WindSpeed, 
+     xlim = range(weather$Date), ylim = range(station_42$WindSpeed, na.rm = T), pch = 20)
+points(x = station_37$Date, y = station_37$WindSpeed, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$WindSpeed, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$WindSpeed, col = 2, pch = 20)
+text(x = min(weather$Date)+50, y = 15, labels = "WindSpeed", adj = 0)
+# Percipitation
+plot(x = station_42$Date, y = station_42$Percipitation, 
+     xlim = range(weather$Date), ylim = range(station_42$Percipitation, na.rm = T), pch = 20)
+points(x = station_37$Date, y = station_37$Percipitation, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$Percipitation, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$Percipitation, col = 2, pch = 20)
+text(x = min(weather$Date)+50, y = 3, labels = "Percipitation", adj = 0)
+# Rain
+plot(x = station_42$Date, y = station_42$Rain, 
+     xlim = range(weather$Date), ylim = range(station_42$Rain, na.rm = T), pch = 20)
+points(x = station_37$Date, y = station_37$Rain, col = 3, pch = 20)
+points(x = station_9$Date, y = station_9$Rain, col = 4, pch = 20)
+points(x = station_38$Date, y = station_38$Rain, col = 2, pch = 20)
+text(x = min(weather$Date)+50, y = 0.8, labels = "Rain", adj = 0)
+# SnowIce
+plot(x = station_42$Date, y = station_42$SnowIce, 
+     xlim = range(weather$Date), ylim = range(station_42$SnowIce, na.rm = T), pch = 20)
+points(x = station_37$Date, y = station_37$SnowIce, pch = 20, col = 3)
+points(x = station_9$Date, y = station_9$SnowIce, pch = 20, col = 4)
+points(x = station_38$Date, y = station_38$SnowIce, pch = 20, col = 2)
+text(x = min(weather$Date)+50, y = 0.8, labels = "SnowIce", adj = 0)
+dev.off()
+
+
+# Old staions do not have measurements
+png("NYC_CentralPark_wind.png", width = 900, height = 350)
+
+par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
+# DewPoint
+plot(x = station_42$Date, y = station_42$DewPoint, 
+     xlim = range(weather$Date), pch = 20)
+points(x = station_37$Date, y = station_37$DewPoint, pch = 20, col = 3)
+points(x = station_9$Date, y = station_9$DewPoint, pch = 20, col = 4)
+points(x = station_38$Date, y = station_38$DewPoint, pch = 20, col = 2)
+text(x = min(weather$Date)+300, y = 65, labels = "DewPoint", adj = 0)
+# MaxSustainedWind
+plot(x = station_42$Date, y = station_42$MaxSustainedWind, 
+     xlim = range(weather$Date), ylim = c(0,30), pch = 20, col = 1)
+points(x = station_37$Date, y = station_37$MaxSustainedWind, pch = 20, col = 3)
+points(x = station_9$Date, y = station_9$MaxSustainedWind, pch = 20, col = 4)
+points(x = station_38$Date, y = station_38$MaxSustainedWind, pch = 20, col = 2)
+text(x = min(weather$Date)+300, y = 25, labels = "MaxSustainedWind", adj = 0)
+# Gust
+plot(x = station_42$Date, y = station_42$Gust, 
+     xlim = range(weather$Date), pch = 20, col = 1)
+points(x = station_37$Date, y = station_37$Gust, pch = 20, col = 3)
+points(x = station_9$Date, y = station_9$Gust, pch = 20, col = 4)
+points(x = station_38$Date, y = station_38$Gust, pch = 20, col = 2)
+text(x = min(weather$Date)+300, y = 40, labels = "Gust", adj = 0)
+dev.off()
+
+#### Focus on NYC and Combine stations at the same location ####################################################################
+
+# list of stations in NYC
+NYC_stations <- list("4", c("59", "50"), c("42", "38", "37", "9"), "28", "27", "26")
+# NYC_stations <- unique_stations %>% filter(Latitude > 40.5 & Latitude < 41 & Longitude > -74.5 & Longitude < -73.5) %>% pull(Station_ID)
+
+# extract stations in NYC
+weather_NYC <- weather %>%
+  filter(Station_ID %in% unlist(NYC_stations))
+
+weather_NYC %>% distinct(Station_ID)
+names(weather_NYC)
+
+# convert long to wide format
+library(tidyr)
+MeanTemp_wide <- weather_NYC %>% select(Date, Station_ID, MeanTemp) %>% spread(Station_ID, MeanTemp)
+MinTemp_wide <- weather_NYC %>% select(Date, Station_ID, MinTemp) %>% spread(Station_ID, MinTemp)
+MaxTemp_wide <- weather_NYC %>% select(Date, Station_ID, MaxTemp) %>% spread(Station_ID, MaxTemp)
+DewPoint_wide <- weather_NYC %>% select(Date, Station_ID, DewPoint) %>% spread(Station_ID, DewPoint)
+Percipitation_wide <- weather_NYC %>% select(Date, Station_ID, Percipitation) %>% spread(Station_ID, Percipitation)
+WindSpeed_wide <- weather_NYC %>% select(Date, Station_ID, WindSpeed) %>% spread(Station_ID, WindSpeed)
+MaxSustainedWind_wide <- weather_NYC %>% select(Date, Station_ID, MaxSustainedWind) %>% spread(Station_ID, MaxSustainedWind)
+Gust_wide <- weather_NYC %>% select(Date, Station_ID, Gust) %>% spread(Station_ID, Gust)
+Rain_wide <- weather_NYC %>% select(Date, Station_ID, Rain) %>% spread(Station_ID, Rain)
+SnowDepth_wide <- weather_NYC %>% select(Date, Station_ID, SnowDepth) %>% spread(Station_ID, SnowDepth)
+SnowIce_wide <- weather_NYC %>% select(Date, Station_ID, SnowIce) %>% spread(Station_ID, SnowIce)
+
+# replace artificial zeros with NA's
+check_variable <- SnowDepth_wide
+par(mfrow = c(10, 1))
+for (i in unlist(NYC_stations)) {
+  if (sum(!is.na(check_variable[,i])) >0) {
+    plot(check_variable[,i])
+  } else {
+    plot(x = check_variable$Date, y = rep(0, nrow(check_variable)), col = 2)
+  }
+  legend("topleft", legend = i)
+}
+
+# DewPoint_wide is fine (NA: 4, 59, 27)
+# Percipitation_wide: 4, 59, 27 (also: weird 100's)
+Percipitation_wide[,c("4", "59", "27")] <- NA
+# WindSpeed_wide: 4, 59
+WindSpeed_wide[,c("4", "59")] <- NA
+# MaxSustainedWind_wide is fine (NA: 59)
+# Gust_wide is fine (NA: 4, 59, 27)
+# Rain_wide: 4, 59, 27
+Rain_wide[,c("4", "59", "27")] <- NA
+# SnowDepth_wide is fine (but INTERESTING!)
+# SnowIce_wide: 4, 59, 27
+SnowIce_wide[,c("4", "59", "27")] <- NA
+
+## now combine similar locations
+
+
+
+
+#### visualize cleaned data #################################################################################
+
+# when do the NYC stations report weather info?
+report_by_NYC_station <- as.data.frame(matrix(nrow = num_days, 
+                                              ncol = length(unlist(NYC_stations))))
+colnames(report_by_NYC_station) <- unlist(NYC_stations)
+for (this_station_ID in unlist(NYC_stations)) {
+  report_by_this_station <- weather_NYC %>%
+    group_by(Date) %>%
+    summarise(reported = sum(this_station_ID %in% Station_ID))
+  report_by_NYC_station[this_station_ID] <- report_by_this_station$reported
+}
+
+# before / after data merge in NYC locations
+
+par(las = 1, mar = c(2,3,2,1), mfrow = c(2,1))
+report_by_station_to_plot <- report_by_NYC_station
+report_by_station_to_plot[unlist(NYC_stations[seq(2,6,2)])] <- 
+  report_by_station_to_plot[unlist(NYC_stations[seq(2,6,2)])] * 2
+image(x = num_stations_by_date$Date, z = as.matrix(report_by_station_to_plot), 
+      col = c(NA, grey(0.4), grey(0.7)), xaxt= "n", yaxt= "n" )
+text(x = lubridate::ymd("20160101"), y = 0.5, labels = "Central Park station operated under four names...")
+text(x = lubridate::ymd("20100601"), y = (1:10-0.5)/10, labels = unlist(NYC_stations))
+axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
+mtext(text = "Weather Stations", at = 0.5, 
+      side = 2, line = 1, las = 3)
+mtext("Same location, different names", at = lubridate::ymd("20100101"), 
+      side = 3, adj = 0, line = 0.5) 
+
+
+#### Explore spatial patterns ####################################################################
 
 library(maps)
 library(mapdata)

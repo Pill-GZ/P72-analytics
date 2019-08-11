@@ -1,4 +1,6 @@
 issues:
+	spelling mistake: "percipitation"
+	precipitation =/= rain + snow/ice
 	date not sorted
 	number of stations in use not constant
 	staions phase in and out
@@ -14,6 +16,7 @@ issues:
 	different stations bearing the same/similar names: 
 		ROCHESTER & ROCHESTER
 		MONTAUK & MONTAUK AIRPORT 
+
 
 ideas: 
 	interaction between population size and weather

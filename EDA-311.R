@@ -1,17 +1,107 @@
 rm(list = ls())
+library(dplyr)
 
-####  Load weather dataset ####
+#### Load weather dataset #############################################################################################
 
 # install.packages('bit64')
 library(data.table)
 records <- data.table::fread("311_Service_Requests_from_2010_to_Present.csv")
-# 
+
+#### data wrangling ####################################################################################################
+
+# clean up column names
 colnames(records) <- make.names(colnames(records), unique = TRUE)
 
-## complaint type
+# check for missing dates -- no missing dates
+anyNA(records$Created.Date)
 
+# create dates
+records <- records %>% 
+  mutate(Date = lubridate::mdy(substr(Created.Date, start = 1, stop = 10)))
+
+#### create sample records #############################################################################################
+
+# blocks of dates -- Jan 12-18, 2015
+records_sample_Jan2015 <- records %>% 
+  filter(Date >= lubridate::ymd('20150112'), 
+         Date <= lubridate::ymd('20150118'))
+fwrite(x = records_sample, file = "311_records_Jan2015.csv")
+
+# blocks of dates -- Jul 20-26, 2015
+records_sample_Jul2015 <- records %>% 
+  filter(Date >= lubridate::ymd('20150720'), 
+         Date <= lubridate::ymd('20150726'))
+fwrite(x = records_sample, file = "311_records_Jul2015.csv")
+
+# random samples of 10,000
+records_sample <- sample_n(records, size = 10000)
+fwrite(x = records_sample, file = "311_records_sample_n10000.csv")
+# records_sample <- sample_n(records, size = 100000)
+# fwrite(x = records_sample, file = "311_records_sample_n100000.csv")
+
+#### create counts by categories -- Agency ##################################################################################
+
+# explore distribution of agency types
+
+agency_table <- table(factor(records$Agency))
+agency_table <- sort(agency_table, decreasing = T)
+length(agency_table)
+
+par(mar = c(5,5,1,1))
+plot(agency_table, las = 2)
+
+barplot(cumsum(agency_table) / sum(agency_table), ylim = c(0,1), las = 2)
+abline(h = 0.95, lty = 2)
+
+# tally number of calls by agency
+tally_by_agency <- records %>% 
+  group_by(Agency, Agency.Name) %>% 
+  summarise(n_records = n_distinct(Unique.Key)) %>%
+  arrange(desc(n_records))
+
+tally_by_agency <- tally_by_agency %>% 
+  group_by(Agency) %>%
+  mutate(total_records_by_agency = sum(n_records)) %>%
+  arrange(desc(total_records_by_agency))
+
+# collapse agency types
+agencyTypes_all <- unlist(tally_by_agency %>% distinct(Agency))
+# Top 10 hadling agencies
+# HPD  # NYPD # DOT  # DSNY # DEP  # DOB  # DPR  # DOHMH # DOF # TLC
+agencyTypes_collapsed <- c('HPD', 'NYPD', 'DOT', 'DSNY', 'DEP', 
+                           'DOB', 'DPR', 'DOHMH', 'DOF', 'TLC',
+                           rep('Others', length(agencyTypes_all) - 10))
+cbind(agencyTypes_all, agencyTypes_collapsed)
+
+# records_copy <- records # save a copy first
+
+# create column for collapsed agency types
+records <- records %>%
+  mutate(Agency.grouped = plyr::mapvalues(Agency, from = agencyTypes_all, to = agencyTypes_collapsed))
+
+# tally by date and (collapsed) agency types
+tally_by_date_agency <- records %>%
+  group_by(Date, Agency.grouped) %>%
+  tally(sort = TRUE) %>% arrange(Date)
+
+tally_by_date_agency
+
+library(tidyr)
+
+# convert long to wide format
+tally_by_date_agency_wide <- tally_by_date_agency %>%
+  spread(Agency.grouped, n) %>%
+  replace(., is.na(.), 0) %>% 
+  select(Date, agencyTypes_collapsed)
+
+fwrite(x = tally_by_date_agency_wide, file = "311_records_by_date_agency.csv")
+
+
+#### complaint type ####################################################################
+  
 complaint_type_summary <- summary(factor(records$Complaint.Type))
 plot(complaint_type_summary)
+sort(names(complaint_type_summary) )
 
 complaint_type_table <- table(factor(records$Complaint.Type))
 complaint_type_table <- sort(complaint_type_table, decreasing = T)
@@ -43,45 +133,8 @@ plot(descriptor_table, las = 3)
 plot(cumsum(descriptor_table) / sum(descriptor_table), ylim = c(0,1))
 abline(h = 0.95, lty = 2)
 
-## agency
-
-agency_summary <- summary(factor(records$Agency))
-plot(agency_summary)
-
-agency_table <- table(factor(records$Agency))
-agency_table <- sort(agency_table, decreasing = T)
-length(agency_table)
-
-par(mar = c(5,5,1,1))
-plot(agency_table, las = 2)
-
-barplot(cumsum(agency_table) / sum(agency_table), ylim = c(0,1), las = 2)
-abline(h = 0.95, lty = 2)
-
-test <- records %>% 
-  group_by(Agency, Agency.Name) %>% 
-  summarise(n_records = n_distinct(Unique.Key)) %>%
-  arrange(desc(n_records))
-
-test <- test %>% 
-  group_by(Agency) %>%
-  mutate(total_records_by_agency = sum(n_records)) %>%
-  arrange(desc(total_records_by_agency))
-
-test %>% distinct(Agency)
-# Top 10 hadling agencies
-# 1 HPD   
-# 2 NYPD  
-# 3 DOT   
-# 4 DSNY  
-# 5 DEP   
-# 6 DOB   
-# 7 DPR   
-# 8 DOHMH 
-# 9 DOF   
-# 10 TLC
-
-# locations
+#### agency 
+#### locations ###################################################################################
 
 location_table <- table(factor(records$Park.Borough))
 location_table <- sort(location_table, decreasing = T)
@@ -89,12 +142,6 @@ length(location_table)
 
 par(mar = c(10,5,1,1))
 plot(location_table, las = 2)
-
-records_sample <- sample_n(records, size = 10000)
-fwrite(x = records_sample, file = "311_records_sample_n10000.csv")
-
-records_sample <- sample_n(records, size = 100000)
-fwrite(x = records_sample, file = "311_records_sample_n100000.csv")
 
 
 library(maps)
