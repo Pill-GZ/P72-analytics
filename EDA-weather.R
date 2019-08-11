@@ -479,7 +479,7 @@ weather_NYC_by_var_wide <- list(MeanTemp = MeanTemp_wide, MinTemp = MinTemp_wide
                                 SnowDepth = SnowDepth_wide, SnowIce = SnowIce_wide)
 
 
-save(weather_NYC_by_var_wide, file = "weather_NYC.Rdata")
+save(weather_NYC_by_var_wide, file = "weather_NYC.Rdata", version = 2)
 load("weather_NYC.Rdata")
 
 #### check if combined data looks OK ######################################################################
