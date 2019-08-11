@@ -36,7 +36,7 @@ unique_stations <- weather %>%
 num_stations_by_date <- weather %>% 
   group_by(Date) %>% 
   summarise(unique_stations = n_distinct(Station_ID, StationName))
-# the number of stations is not constant!
+# the number of stations is not constant!!
 
 # compare station locations before and after May 2018 
 station_ID_after_May2018 <- weather %>% 
@@ -242,8 +242,9 @@ station_38 <- test[['38']]
 station_37 <- test[['37']]
 station_9 <- test[['9']]
 
-## Both report temperatures
-png("NYC_CentralPark_tmp.png", width = 900, height = 350)
+## All report temperatures
+
+#png("NYC_CentralPark_tmp.png", width = 900, height = 350)
 par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # temperatures -- MeanTemp
 plot(x = station_42$Date, y = station_42$MeanTemp, xlim = range(weather$Date), pch = 20)
@@ -263,12 +264,12 @@ points(x = station_37$Date, y = station_37$MinTemp, col = 3, pch = 20)
 points(x = station_9$Date, y = station_9$MinTemp, col = 4, pch = 20)
 points(x = station_38$Date, y = station_38$MinTemp, col = 2, pch = 20)
 text(x = min(weather$Date)+300, y = 80, labels = "MinTemp", adj = 0)
-dev.off()
+#dev.off()
 
 
-# Old staions have zero measurements
-png("NYC_CentralPark_rain.png", width = 900, height = 350)
+# All staions have non-zero measurements
 
+#png("NYC_CentralPark_rain.png", width = 900, height = 350)
 par(mfrow = c(4,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # Windspeed
 plot(x = station_42$Date, y = station_42$WindSpeed, 
@@ -298,13 +299,13 @@ points(x = station_37$Date, y = station_37$SnowIce, pch = 20, col = 3)
 points(x = station_9$Date, y = station_9$SnowIce, pch = 20, col = 4)
 points(x = station_38$Date, y = station_38$SnowIce, pch = 20, col = 2)
 text(x = min(weather$Date)+50, y = 0.8, labels = "SnowIce", adj = 0)
-dev.off()
+#dev.off()
 
 
 # Old staions do not have measurements
-png("NYC_CentralPark_wind.png", width = 900, height = 350)
 
-par(mfrow = c(3,1), mar = c(2,3,1,1), xaxs="i", las = 1)
+#png("NYC_CentralPark_wind.png", width = 900, height = 350)
+par(mfrow = c(4,1), mar = c(2,3,1,1), xaxs="i", las = 1)
 # DewPoint
 plot(x = station_42$Date, y = station_42$DewPoint, 
      xlim = range(weather$Date), pch = 20)
@@ -314,7 +315,7 @@ points(x = station_38$Date, y = station_38$DewPoint, pch = 20, col = 2)
 text(x = min(weather$Date)+300, y = 65, labels = "DewPoint", adj = 0)
 # MaxSustainedWind
 plot(x = station_42$Date, y = station_42$MaxSustainedWind, 
-     xlim = range(weather$Date), ylim = c(0,30), pch = 20, col = 1)
+     xlim = range(weather$Date), ylim = c(5,30), pch = 20, col = 1)
 points(x = station_37$Date, y = station_37$MaxSustainedWind, pch = 20, col = 3)
 points(x = station_9$Date, y = station_9$MaxSustainedWind, pch = 20, col = 4)
 points(x = station_38$Date, y = station_38$MaxSustainedWind, pch = 20, col = 2)
@@ -326,7 +327,14 @@ points(x = station_37$Date, y = station_37$Gust, pch = 20, col = 3)
 points(x = station_9$Date, y = station_9$Gust, pch = 20, col = 4)
 points(x = station_38$Date, y = station_38$Gust, pch = 20, col = 2)
 text(x = min(weather$Date)+300, y = 40, labels = "Gust", adj = 0)
-dev.off()
+# SnowDepth
+plot(x = station_42$Date, y = station_42$SnowDepth, 
+     xlim = range(weather$Date), pch = 20, col = 1)
+points(x = station_37$Date, y = station_37$SnowDepth, pch = 20, col = 3)
+points(x = station_9$Date, y = station_9$SnowDepth, pch = 20, col = 4)
+points(x = station_38$Date, y = station_38$SnowDepth, pch = 20, col = 2)
+text(x = min(weather$Date)+300, y = 16, labels = "SnowDepth", adj = 0)
+#dev.off()
 
 #### Focus on NYC and Combine stations at the same location ####################################################################
 
@@ -389,64 +397,89 @@ SnowIce_wide[,c("4", "59", "27")] <- NA
 ############## now combine similar locations ###############################################################
 
 NYC_stations
-
-NYC_stations_combined <- c("4", "50", "9", "28", "27", "26")
+(NYC_stations_combined <- paste0('Station.', c("4", "50", "9", "28", "27", "26")))
 
 MeanTemp_wide <- MeanTemp_wide %>% 
   mutate('9' = coalesce(!!!MeanTemp_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!MeanTemp_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 MinTemp_wide <- MinTemp_wide %>% 
   mutate('9' = coalesce(!!!MinTemp_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!MinTemp_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 MaxTemp_wide <- MaxTemp_wide %>% 
   mutate('9' = coalesce(!!!MaxTemp_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!MaxTemp_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 DewPoint_wide <- DewPoint_wide %>% 
   mutate('9' = coalesce(!!!DewPoint_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!DewPoint_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 Percipitation_wide <- Percipitation_wide %>% 
   mutate('9' = coalesce(!!!Percipitation_wide[rev(NYC_stations[[3]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 WindSpeed_wide <- WindSpeed_wide %>% 
   mutate('9' = coalesce(!!!WindSpeed_wide[rev(NYC_stations[[3]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 MaxSustainedWind_wide <- MaxSustainedWind_wide %>% 
   mutate('9' = coalesce(!!!MaxSustainedWind_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!MaxSustainedWind_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 Gust_wide <- Gust_wide %>% 
   mutate('9' = coalesce(!!!Gust_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!Gust_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 Rain_wide <- Rain_wide %>% 
   mutate('9' = coalesce(!!!Rain_wide[rev(NYC_stations[[3]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 SnowDepth_wide <- SnowDepth_wide %>% 
   mutate('9' = coalesce(!!!SnowDepth_wide[rev(NYC_stations[[3]])])) %>% 
   mutate('50' = coalesce(!!!SnowDepth_wide[rev(NYC_stations[[2]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
 SnowIce_wide <- SnowIce_wide %>% 
   mutate('9' = coalesce(!!!SnowIce_wide[rev(NYC_stations[[3]])])) %>% 
-  select(-c("42", "38", "37", "59"))
+  select(-c("42", "38", "37", "59")) %>% 
+  setNames(paste0(c("", rep('Station.', ncol(.)-1)), names(.))) %>%
+  mutate(Average = rowMeans(select(., starts_with("Station")), na.rm = TRUE))
 
-save(MeanTemp_wide, MinTemp_wide, MaxTemp_wide, DewPoint_wide, 
-     Percipitation_wide, WindSpeed_wide, MaxSustainedWind_wide, 
-     Gust_wide, Rain_wide, SnowDepth_wide, SnowIce_wide, 
-     file = "weather_NYC.Rdata")
+
+weather_NYC_by_var_wide <- list(MeanTemp = MeanTemp_wide, MinTemp = MinTemp_wide, MaxTemp = MaxTemp_wide, 
+                                DewPoint = DewPoint_wide, Percipitation = Percipitation_wide, WindSpeed = WindSpeed_wide, 
+                                MaxSustainedWind = MaxSustainedWind_wide, Gust = Gust_wide, Rain = Rain_wide, 
+                                SnowDepth = SnowDepth_wide, SnowIce = SnowIce_wide)
+
+
+save(weather_NYC_by_var_wide, file = "weather_NYC.Rdata")
 load("weather_NYC.Rdata")
 
 #### check if combined data looks OK ######################################################################
@@ -454,9 +487,11 @@ load("weather_NYC.Rdata")
 # MeanTemp_wide MinTemp_wide MaxTemp_wide DewPoint_wide Percipitation_wide
 # WindSpeed_wide MaxSustainedWind_wide Gust_wide Rain_wide SnowDepth_wide SnowIce_wide 
 
-check_variable <- MeanTemp_wide
+NYC_stations_combined
+
+check_variable <- SnowIce_wide
 par(mfrow = c(6, 1), mar = c(3,3,1,1))
-for (i in unlist(NYC_stations_combined)) {
+for (i in NYC_stations_combined) {
   if (sum(!is.na(check_variable[,i])) >0) {
     plot(check_variable[,i])
   } else {
