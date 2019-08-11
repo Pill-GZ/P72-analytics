@@ -7,10 +7,8 @@ library(dplyr)
 function(input,output, session){
   
   data <- reactive({
-    # ramdomly select events
-    x <- df %>% sample_n(input$max_num_events) 
     # filter by dates
-    # x <- x %>% filter(Date == input$date)
+    x <- df %>% filter(Date == input$date)
     # filter by agency types
     if (input$agency %in% agencyTypes) {
       x <- x %>% filter(Agency == input$agency)
@@ -20,19 +18,23 @@ function(input,output, session){
     x
   })
   
+  data_sample <- reactive({
+    # ramdomly select events
+    data() %>% sample_n(input$max_num_events) 
+  })
+  
   icons <- reactive({
     awesomeIcons(
       icon = c('flag'),
       library = 'ion',
       markerColor = 'white',
-      iconColor = eventColors[match(x = data()$Agency, nomatch = 9, 
+      iconColor = eventColors[match(x = data_sample()$Agency, nomatch = 9, 
                                     table = agencyTypes)]
     )
   })
   
   output$mymap <- renderLeaflet({
-    filtered.df <- data()
-    
+    filtered.df <- data_sample()
     m <- leaflet(data = filtered.df) %>%
       addProviderTiles(providers$CartoDB.Positron) %>% # addTiles() %>%
       addAwesomeMarkers(~Longitude, ~Latitude, icon = icons(), 
@@ -47,12 +49,13 @@ function(input,output, session){
     if (nrow(data()) == 0)
       return(NULL)
     
-    tbl <- df %>% group_by(Agency) %>% summarise(count = n_distinct(Unique.Key)) %>% 
+    tbl <- data() %>% group_by(Agency) %>% 
+      summarise(count = n_distinct(Unique.Key)) %>% 
       arrange(match(Agency, agencyTypes), desc(count)) # arrange(desc(count))
     par(mar = c(0,5,3,1))
     barplot(rev(tbl$count[1:length(agencyTypes)]), names.arg = rev(agencyTypes),
-            las = 2, horiz = T, xaxt = 'n')
-    axis(side = 3, pos = 10, at = seq(0, max(tbl$count), 500), las = 2)
+            las = 2, horiz = T, xaxt = 'n', xlim = c(0, 3000))
+    axis(side = 3, pos = 10, at = seq(0, 3000, 500), las = 2)
   })
   
   
@@ -66,17 +69,25 @@ function(input,output, session){
     quantile(weather_var_val(), probs = input$percentile, na.rm = T)
   })
   
+  shade_val_above <- reactive({
+    if (input$shade_val_above == "above the quantile") {
+      return(T)
+    } else if (input$shade_val_above == "below the quantile") {
+      return(F)
+    } 
+  })
+  
   output$traceplot <- renderPlot({
     # shaded traceplots - first 5 agencies
     par(mar = c(2,5,0,1), las = 1, mfrow = c(11,1))
     for (agency in agencyTypes_collapsed) {
       # create empty plot
       plot(x = tally_by_date_agency_wide$Date, y = unlist(tally_by_date_agency_wide[,..agency]), 
-           xlim = range(Dates) - c(0,50), width = 800, 
+           xlim = range(Dates) - c(0,50),
            type = 'l', lty = 1, xaxs = 'i', xaxt = 'n', ylab = "")
       
       # shade weather variables
-      threshold_exceedance <- if (input$shade_val_above) { 
+      threshold_exceedance <- if (shade_val_above()) { 
         weather_var_val() > threshold()
       } else { weather_var_val() < threshold() } 
       threshold_exceedance[is.na(threshold_exceedance)] <- 0
@@ -87,10 +98,10 @@ function(input,output, session){
       lines(x = tally_by_date_agency_wide$Date, y = unlist(tally_by_date_agency_wide[,..agency]), lty = 1)
       
       # legend and axis
-      legend("topleft", legend = agency, bty = 'n', cex = 3)
-      legend("topright", fill = "grey80", bty = 'n', cex = 3,
+      legend("topleft", legend = agency, bty = 'n', cex = 2)
+      legend("topright", fill = "grey80", bty = 'n', cex = 2,
              legend = paste(input$weather_var_name, 
-                            ifelse(input$shade_val_above, ">", "<"), 
+                            ifelse(shade_val_above(), ">", "<"), 
                             format(round(threshold(), 2), nsmall = 2)))
       axis(side = 1, at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")), labels = seq(2010, 2020, 2))
     }

@@ -22,17 +22,17 @@ navbarPage("311 what's your non-emergency?", id="nav", # theme = "bootstrap-cosm
                         
                         leafletOutput("mymap",height = 1000),
                         absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                      draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
+                                      draggable = TRUE, top = 100, left = 40, right = "auto", bottom = "auto",
                                       width = 330, height = "auto",
     
                                       h2("Data filter"),
     
                                       dateInput('date',
                                                 label = paste('Select date'),
-                                                value = as.character(as.Date("2015-04-17")),
-                                                min = as.Date("2010-01-01"), max = as.Date("2019-08-07"),
+                                                value = as.character(as.Date("2015-01-12")),
+                                                min = as.Date("2015-01-12"), max = as.Date("2015-01-18"),
                                                 format = "dd/mm/yy",
-                                                startview = 'year', weekstart = 0
+                                                startview = 'month', weekstart = 0
                                       ),
                                       
                                       numericInput("max_num_events", "Max number of events to display", 100),
@@ -52,14 +52,14 @@ navbarPage("311 what's your non-emergency?", id="nav", # theme = "bootstrap-cosm
                       column(2,
                              br(),
                              #### weather variable ####
-                             wellPanel(id = "sample_size",
+                             wellPanel(id = "sample_size", 
                                        selectInput("weather_var_name", "Select a weather variable",
-                                                   as.list(weather_var_names)),
-                                       sliderInput("percentile", "Threshold percentile:", 
-                                                   value = 0.5, min = 0, max = 1, step = .1),
-                                       checkboxInput("shade_val_above", 
-                                                     "Shade area above the quantile", TRUE)
-                             )
+                                                   as.list(weather_var_names), selected = "SnowDepth"),
+                                       sliderInput("percentile", "Threshold quantile prob:", 
+                                                   value = 0.1, min = 0, max = 1, step = .1),
+                                       selectInput("shade_val_above", "Shade area...", 
+                                                   c("above the quantile", "below the quantile"))
+                                      )
                              
                       ), # end of first column
                       
@@ -67,9 +67,9 @@ navbarPage("311 what's your non-emergency?", id="nav", # theme = "bootstrap-cosm
                       
                       column(10, 
                              # textOutput("debug"),
-                             div(id = "OR-RAF_diagram",
+                             div(id = "traceplot_div",
                                  
-                                 tags$style(type="text/css", '#OR-RAF_diagram { width:1000px; }'),
+                                 tags$style(type="text/css", '#traceplot_div { width:1000px; }'),
                                  
                                  plotOutput("traceplot",height = "2500px", width = "100%")
                              )
