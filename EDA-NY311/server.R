@@ -8,7 +8,12 @@ function(input,output, session){
   
   data <- reactive({
     # filter by dates
-    x <- df %>% filter(Date == input$date)
+    df %>% filter(Date == input$date)
+  })
+  
+  data_sample <- reactive({
+    # ramdomly select events
+    x <- data() %>% sample_n(input$max_num_events) 
     # filter by agency types
     if (input$agency %in% agencyTypes) {
       x <- x %>% filter(Agency == input$agency)
@@ -16,11 +21,6 @@ function(input,output, session){
       x <- x %>% filter(!Agency %in% agencyTypes)
     }
     x
-  })
-  
-  data_sample <- reactive({
-    # ramdomly select events
-    data() %>% sample_n(input$max_num_events) 
   })
   
   icons <- reactive({

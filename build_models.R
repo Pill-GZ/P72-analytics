@@ -159,14 +159,9 @@ with(tally_by_date_agency_SnowIce,
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, col = c("red", "blue"), bty = 'n')
 
-p <- plotly::plot_ly(data = tally_by_date_agency_SnowIce, x = ~Date, y = ~residuals_model_2)
+# plotly::plot_ly(x = Dates.lag7, y = residuals_model_2)
 
-with(tally_by_date_agency_SnowIce,
-     plotly::plotly(Dates.lag7, residuals_model_2, 
-                    pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', col = ifelse(SnowDepth > 0, "red", "blue")))
-
-
-acf(residuals_model_2, lag.max = 500)
+acf(residuals_model_2, lag.max = 50)
 
 par(mfrow = c(5,1))
 plot(tail(tally_by_date_agency_Temp$Temperature, -7), residuals_model_2)
@@ -175,13 +170,6 @@ plot(tail(weather_NYC_by_var_wide$MeanTemp$Weekly.average, -7), residuals_model_
 plot(tail(weather_NYC_by_var_wide$MeanTemp$Weekly.decrease, -7), residuals_model_2)
 plot(tail(weather_NYC_by_var_wide$MeanTemp$Monthly.decrease, -7), residuals_model_2)
 
-plot(weather_NYC_by_var_wide$MeanTemp$Average, residuals_model_3)
-plot(head(weather_NYC_by_var_wide$MeanTemp$Average, -1), tail(residuals_model_3, -1))
-plot(weather_NYC_by_var_wide$MeanTemp$Weekly.average, residuals_model_3)
-plot(weather_NYC_by_var_wide$MeanTemp$Weekly.decrease, residuals_model_3)
-plot(weather_NYC_by_var_wide$MeanTemp$Monthly.decrease, residuals_model_3)
-
-
 # model fitting
 model_3_temperature <- lm(formula = DOT ~ Weekday + Holiday + DOT.lag7 + Holiday.lag7 + 
                             DOT.lag1 + Holiday.lag1 + DOT.lag3 + Holiday.lag3 + 
@@ -189,12 +177,23 @@ model_3_temperature <- lm(formula = DOT ~ Weekday + Holiday + DOT.lag7 + Holiday
                           data = tally_by_date_agency_Temp)
 residuals_model_3 <- residuals(model_3_temperature)
 
+# model fitting
+model_3_snow <- lm(formula = DOT ~ Weekday + Holiday + DOT.lag7 + Holiday.lag7 + 
+                         DOT.lag1 + Holiday.lag1 + DOT.lag3 + Holiday.lag3 + I(SnowDepth>0) + SnowIce,
+                       data = tally_by_date_agency_SnowIce)
+residuals_model_3 <- residuals(model_3_snow)
 
-with(tally_by_date_agency_Temp,
-     plot(Date[!is.na(Monthly.decrease)], residuals_model_3, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
-          col = ifelse(Temperature < 40, "red", "blue")))
+par(mfrow = c(2,1))
+with(tally_by_date_agency_SnowIce,
+     plot(Dates.lag7, residuals_model_2, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+          col = ifelse(SnowDepth > 0, "red", "blue")))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
-legend("topleft", legend = c('Temp < 40', 'Temp > 40'), pch = 20, col = c("red", "blue"), bty = 'n')
+legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth == 0'), pch = 20, col = c("red", "blue"), bty = 'n')
+with(tally_by_date_agency_SnowIce,
+     plot(Dates.lag7, residuals_model_3, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+          col = ifelse(SnowDepth > 0, "red", "blue")))
+axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
+legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth == 0'), pch = 20, col = c("red", "blue"), bty = 'n')
 
 
 
