@@ -4,14 +4,14 @@ library(shiny)
 library(dplyr)
 library(purrr)
 
-df <- data.table::fread("../311_records_Jan2015.csv")
+df <- data.table::fread("data/311_records_Jan2015.csv")
 # df <- df %>% 
 #   mutate(Date = lubridate::mdy(substr(Created.Date, start = 1, stop = 10)))
 
-tally_by_date_agency_wide <- data.table::fread("../311_records_by_date_agency.csv")
+tally_by_date_agency_wide <- data.table::fread("data/311_records_by_date_agency.csv")
 tally_by_date_agency_wide$Date <- as.Date(tally_by_date_agency_wide$Date)
 
-load("../weather_NYC.Rdata")
+load("data/weather_NYC.Rdata")
 
 eventColors <- c('#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', 
                  '#ffff33', '#a65628', '#f781bf', '#999999')
