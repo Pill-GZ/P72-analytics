@@ -103,7 +103,7 @@ weather_NYC_by_var_wide$MeanTemp$Monthly.decrease <-
 # plot(Dates, weather_NYC_by_var_wide$MeanTemp$Monthly.average, type = 'b')
 # plot(Dates, weather_NYC_by_var_wide$MeanTemp$Monthly.decrease, type = 'b')
 
-tally_by_date_agency_Temp <- tally_by_date_agency_Lagged %>% 
+tally_by_date_agency_Temp <- tally_by_date_agency_Holidays %>% 
   mutate(Temperature = weather_NYC_by_var_wide$MeanTemp$Average)
 tally_by_date_agency_Temp <- tally_by_date_agency_Temp %>% 
   mutate(Monthly.decrease = weather_NYC_by_var_wide$MeanTemp$Monthly.decrease)
@@ -165,9 +165,41 @@ axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010,
 legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, col = c("red", "blue"), bty = 'n')
 
 
+#### create features -- lagged observations #################################################################
+
+# add lagged (7 days) observations and holidays
+temp_lagged7 <- tally_by_date_agency_SnowDepth %>% 
+  select(DOT, Holiday) %>% 
+  mutate_all(funs(lag, .args = list(7))) %>% 
+  setNames(paste0(names(.), rep('.lag7', ncol(.))))
+tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_SnowDepth, temp_lagged7)
+
+# add lagged (1 days) observations and holidays
+temp_lagged1 <- tally_by_date_agency_Lagged %>% 
+  select(DOT, Holiday) %>% 
+  mutate_all(funs(lag, .args = list(1))) %>% 
+  setNames(paste0(names(.), rep('.lag1', ncol(.))))
+tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_Lagged, temp_lagged1)
+
+# add lagged (3 days) observations and holidays
+temp_lagged3 <- tally_by_date_agency_Lagged %>% 
+  select(DOT, Holiday) %>% 
+  mutate_all(funs(lag, .args = list(3))) %>% 
+  setNames(paste0(names(.), rep('.lag3', ncol(.))))
+tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_Lagged, temp_lagged3)
+
+# remove first 7 days for plotting
+Dates.lag7 <- tail(Dates, -7)
+
+# # model fitting
+# model_2_holidays <- lm(formula = DOT ~ Weekday + Holiday + DOT.lag7 + Holiday.lag7 + 
+#                          DOT.lag1 + Holiday.lag1 + DOT.lag3 + Holiday.lag3,
+#                        data = tally_by_date_agency_Lagged)
+# residuals_model_2 <- residuals(model_2_holidays)
+
 ##############################################################################################################################################
 
-acf(residuals_model_3, lag.max = 500)
+acf(residuals_model_4, lag.max = 500)
 
 # model fitting
 model_4_autocor <- lm(formula = DOT ~ Weekday + Holiday +
@@ -175,7 +207,7 @@ model_4_autocor <- lm(formula = DOT ~ Weekday + Holiday +
                         SnowDepth.roll7 + SnowDepth.roll30 + SnowDepth.roll60 + 
                         SnowDepth.roll100 + SnowDepth.roll200 +
                         DOT.lag7 + Holiday.lag7 + DOT.lag1 + Holiday.lag1,
-                      data = tally_by_date_agency_SnowDepth)
+                      data = tally_by_date_agency_Lagged)
 residuals_model_4 <- residuals(model_4_autocor)
 
 
@@ -192,12 +224,12 @@ legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, col = 
 # model fitting
 model_5 <- lm(formula = DOT ~ Weekday + Holiday + 
                 DOT.lag7 + Holiday.lag7 + DOT.lag1 + Holiday.lag1,
-              data = tally_by_date_agency_SnowDepth)
+              data = tally_by_date_agency_Lagged)
 residuals_model_5 <- residuals(model_5)
 
 
 # residuals from model 5
-with(tally_by_date_agency_SnowDepth,
+with(tally_by_date_agency_Lagged,
      plot(tail(Dates, -7), residuals_model_5, xlim = range(Dates),
           pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
           col = ifelse(tail(SnowDepth, -7) > 0, "red", "blue")))
@@ -209,53 +241,56 @@ legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, col = 
 ##############################################################################################################################################
 
 
-par(mar = c(2,5,1,1), mfrow = c(4,1), las = 1)
+par(mar = c(2,4,1,1), mfrow = c(4,1), las = 1, cex = 1)
 with(tally_by_date_agency_Weekdays,
-     plot(Date, DOT, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+     plot(Date, DOT, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
           col = ifelse(Weekday %in% c('Sun', 'Sat'), "red", "blue")))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 legend("topleft", legend = c('Weekends', 'Weekdays'), pch = 20, 
        col = c("red", "blue"), bg = grey(0.9), box.lwd = 0)
+text(x = lubridate::ymd("20180501"), y = 2500, adj = 1, labels = "DOT incoming calls")
 
 # residuals from model 1
 with(tally_by_date_agency_Weekdays,
-     plot(Date, residuals_model_1, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+     plot(Date, residuals_model_1, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
           col = ifelse(Date %in% holidays$Date, "red", "blue")))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 legend("topleft", legend = c('Holidays', 'Non-holidays'), pch = 20, 
        col = c("red", "blue"),  bg = grey(0.9), box.lwd = 0)
+text(x = lubridate::ymd("20180501"), y = 1400, adj = 1, labels = "Residuals from Model 1")
 
 # residuals from model 2
 with(tally_by_date_agency_SnowDepth,
-     plot(Dates, residuals_model_2, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+     plot(Dates, residuals_model_2, pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
           col = ifelse(SnowDepth > 0, "red", "blue")))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, 
        col = c("red", "blue"), bg = grey(0.9), box.lwd = 0)
+text(x = lubridate::ymd("20180501"), y = 1400, adj = 1, labels = "Residuals from Model 2")
 
 # # residuals from model 3
 # with(tally_by_date_agency_SnowDepth,
 #      plot(tail(Dates, -199), residuals_model_3, xlim = range(Dates),
-#           pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+#           pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
 #           col = ifelse(tail(SnowDepth, -199) > 0, "blue", "blue")))
 # axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 # legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, 
 #        col = c("red", "blue"),  bg = grey(0.9), box.lwd = 0)
 
 # residuals from model 4
-with(tally_by_date_agency_SnowDepth,
+with(tally_by_date_agency_Lagged,
      plot(tail(Dates, -199), residuals_model_4, xlim = range(Dates),
-          pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+          pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
           col = ifelse(tail(SnowDepth, -199) > 0, "blue", "blue")))
 axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 # legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, 
 #        col = c("red", "blue"),  bg = grey(0.9), box.lwd = 0)
-
+text(x = lubridate::ymd("20180501"), y = 1400, adj = 1, labels = "Residuals from Model 3")
 
 # # residuals from model 5
 # with(tally_by_date_agency_SnowDepth,
 #      plot(tail(Dates, -7), residuals_model_5, xlim = range(Dates),
-#           pch = 20, ylab = "", xaxs = 'i', xaxt = 'n',
+#           pch = 20, ylab = "", xaxs = 'i', xaxt = 'n', cex = 0.5,
 #           col = ifelse(tail(SnowDepth, -7) > 0, "red", "blue")))
 # axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010, 2020, 2), "0101")))
 # legend("topleft", legend = c('SnowDepth > 0', 'SnowDepth = 0'), pch = 20, 
@@ -330,35 +365,3 @@ axis(side = 1, labels = seq(2010, 2020, 2), at = lubridate::ymd(paste0(seq(2010,
 legend("topleft", legend = c('Temp < 40', 'Temp > 40'), pch = 20, col = c("red", "blue"), bty = 'n')
 
 
-
-#### create features -- lagged observations #################################################################
-
-# add lagged (7 days) observations and holidays
-temp_lagged7 <- tally_by_date_agency_Holidays %>% 
-  select(-Date, -Weekday) %>% 
-  mutate_all(funs(lag, .args = list(7))) %>% 
-  setNames(paste0(names(.), rep('.lag7', ncol(.))))
-tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_Holidays, temp_lagged7)
-
-# add lagged (1 days) observations and holidays
-temp_lagged1 <- tally_by_date_agency_Holidays %>% 
-  select(-Date, -Weekday) %>% 
-  mutate_all(funs(lag, .args = list(1))) %>% 
-  setNames(paste0(names(.), rep('.lag1', ncol(.))))
-tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_Lagged, temp_lagged1)
-
-# add lagged (3 days) observations and holidays
-temp_lagged3 <- tally_by_date_agency_Holidays %>% 
-  select(-Date, -Weekday) %>% 
-  mutate_all(funs(lag, .args = list(3))) %>% 
-  setNames(paste0(names(.), rep('.lag3', ncol(.))))
-tally_by_date_agency_Lagged <- cbind(tally_by_date_agency_Lagged, temp_lagged3)
-
-# remove first 7 days for plotting
-Dates.lag7 <- tail(Dates, -7)
-
-# # model fitting
-# model_2_holidays <- lm(formula = DOT ~ Weekday + Holiday + DOT.lag7 + Holiday.lag7 + 
-#                          DOT.lag1 + Holiday.lag1 + DOT.lag3 + Holiday.lag3,
-#                        data = tally_by_date_agency_Lagged)
-# residuals_model_2 <- residuals(model_2_holidays)
