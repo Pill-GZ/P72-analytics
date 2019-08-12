@@ -47,10 +47,12 @@ agency_table <- table(factor(records$Agency))
 agency_table <- sort(agency_table, decreasing = T)
 length(agency_table)
 
-par(mar = c(5,5,1,1))
-plot(agency_table, las = 2)
+par(mar = c(5,3,1,1), mfrow = c(2,1))
+barplot(agency_table / sum(agency_table), las = 2, ylim = c(0, 0.3))
+text(20, 0.2, labels = "Most of the calls are handled by a few deptments ...")
 
 barplot(cumsum(agency_table) / sum(agency_table), ylim = c(0,1), las = 2)
+mtext(text = "... top 10 departments handles 97% of the calls.", side = 3, at = 0, adj = 0)
 abline(h = 0.95, lty = 2)
 
 # tally number of calls by agency
@@ -97,7 +99,7 @@ fwrite(x = tally_by_date_agency_wide, file = "311_records_by_date_agency.csv")
 
 
 #### complaint type ####################################################################
-  
+
 complaint_type_summary <- summary(factor(records$Complaint.Type))
 plot(complaint_type_summary)
 sort(names(complaint_type_summary) )
@@ -109,7 +111,7 @@ length(complaint_type_table)
 par(mar = c(15,3,1,1), mfrow = c(1,1))
 plot(complaint_type_table, las = 3)
 par(mar = c(3,3,1,1), mfrow = c(1,1))
-plot(cumsum(complaint_type_table) / sum(complaint_type_table), ylim = c(0,1))
+plot(cumsum(complaint_type_table) / sum(complaint_type_table), ylim = c(0,1), type = 'l')
 abline(h = 0.95, lty = 2)
 
 library(dplyr)
@@ -139,8 +141,8 @@ location_table <- table(factor(records$Park.Borough))
 location_table <- sort(location_table, decreasing = T)
 length(location_table)
 
-par(mar = c(10,5,1,1))
-plot(location_table, las = 2)
+par(mar = c(8,5,1,1))
+barplot(location_table / sum(location_table), las = 2, ylim = c(0, 0.3))
 
 
 library(maps)
