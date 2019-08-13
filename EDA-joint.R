@@ -229,21 +229,22 @@ axis(side = 1, labels = month.abb,
 
 ## feature engineering illustration -- pulse response intervention #########################################
 
-pulse <- c(rep(0, 100), rep(1, 100), rep(0, 800))
+pulse <- c(rep(0, 100), rep(1, 200), rep(0, 700))
 response <- exp(-(0:900)/200)
 par(mar = c(2,3,1,1), mfrow = c(3,1), las = 1, cex = 1)
-plot(c(rep(0, 99), response), type = 'l', ylim = c(0, 1.5), xaxt = 'n')
+plot(c(rep(0, 99), response), type = 'l', ylim = c(0, 1.5), xaxt = 'n', col = "blue", lwd = 2)
 axis(side = 1, at = seq(0, 1000, 100), labels = seq(-1, 9, 1))
-text(x = 400, y = 1.2, labels = "Response to a single pulse")
-text(x = 530, y = 0.9, labels = "... i.e., calls caused by one snowy day")
-plot(pulse, type = 'l', ylim = c(0, 1.5), xaxt = 'n')
+text(x = 400, y = 1.2, labels = "Response filter for a single pulse f")
+text(x = 530, y = 0.9, labels = "... i.e., #calls caused by one snowy day")
+plot(pulse, type = 'l', ylim = c(0, 1.5), xaxt = 'n', col = "red", lwd = 2)
 axis(side = 1, at = seq(0, 1000, 100), labels = seq(-1, 9, 1))
-text(x = 450, y = 1.2, labels = "Signal sustained over time")
-text(x = 550, y = 0.9, labels = "... i.e., consecutive snowy days")
+text(x = 500, y = 1.2, labels = "Signal sustained over time x")
+text(x = 600, y = 0.9, labels = "... i.e., consecutive snowy days")
 response <- c(rep(0, 99), exp(-(0:900)/200))
 convolution <- rep(0, 1000)
-for (i in 1:100) { convolution <- convolution + lag(response, default = 0, n = i) }
-plot(convolution/100, type = 'l', ylim = c(0,1.5), xaxt = 'n')
+for (i in 1:200) { convolution <- convolution + lag(response, default = 0, n = i) }
+plot(convolution/100, type = 'l', ylim = c(0,1.5), xaxt = 'n', col = "purple", lwd = 2)
 axis(side = 1, at = seq(0, 1000, 100), labels = seq(-1, 9, 1))
-text(x = 600, y = 1.2, labels = "Observed effect,  i.e., total number of calls")
-text(x = 650, y = 0.9, labels = "...  is their convolution")
+text(x = 600, y = 1.3, labels = "Observed values y(t)")
+text(x = 670, y = 1.0, labels = "... i.e., total number of calls")
+text(x = 720, y = 0.7, labels = "... is their convolution: y = f*x")

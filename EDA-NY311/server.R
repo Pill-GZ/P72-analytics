@@ -6,6 +6,11 @@ library(dplyr)
 
 function(input,output, session){
   
+  #### automatically end session on quiting ####
+  session$onSessionEnded(function() {
+    stopApp()
+  })
+  
   data <- reactive({
     # filter by dates
     df %>% filter(Date == input$date)
