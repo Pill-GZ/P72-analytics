@@ -365,5 +365,17 @@ tally_by_date_agency_all_weather <- tally_by_date_agency_all_weather %>%
 tally_by_date_agency_all_weather <- tally_by_date_agency_all_weather %>% 
   mutate(Rain = weather_NYC_by_var_wide$Rain$Average)
 
+# MeanTemp
+tally_by_date_agency_all_weather <- tally_by_date_agency_all_weather %>%
+  mutate(MeanTemp = weather_NYC_by_var_wide$MeanTemp$Average)
+
+# MinTemp
+tally_by_date_agency_all_weather <- tally_by_date_agency_all_weather %>%
+  mutate(MinTemp = weather_NYC_by_var_wide$MinTemp$Average)
+
+# MaxTemp
+tally_by_date_agency_all_weather <- tally_by_date_agency_all_weather %>%
+  mutate(MaxTemp = weather_NYC_by_var_wide$MaxTemp$Average)
+
 
 save(tally_by_date_agency_all_weather, file = "311_records_with_weather.Rda", version = 2)
